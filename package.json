@@ -1,0 +1,19 @@
+{
+  "name": "carrefour-api-tests",
+  "version": "1.0.0",
+  "description": "Testes automatizados de API com Postman + Newman",
+  "main": "index.js",
+  "scripts": {
+    "test": "newman run postman/Carrefour_API_Users.postman_collection.json -e postman/Carrefour_API_Env.postman_environment.json --reporters cli,htmlextra --reporter-htmlextra-export reports/index.html",
+    "test:negativos": "newman run postman/Carrefour_API_Users.postman_collection.json -e postman/Carrefour_API_Env.postman_environment.json --folder \"Negativos\" --reporters cli,htmlextra --reporter-htmlextra-export reports/negativos.html",
+    "test:rate": "newman run postman/Carrefour_API_Users.postman_collection.json -e postman/Carrefour_API_Env.postman_environment.json --folder \"Rate limit\" --iteration-count 105 --reporters cli,htmlextra --reporter-htmlextra-export reports/ratelimit.html",
+    "test:ci": "newman run postman/Carrefour_API_Users.postman_collection.json -e postman/Carrefour_API_Env.postman_environment.json --reporters cli,htmlextra,junit --reporter-htmlextra-export reports/index.html --reporter-junit-export reports/junit.xml"
+  },
+  "keywords": [],
+  "author": "",
+  "license": "ISC",
+  "devDependencies": {
+    "newman": "^6.2.1",
+    "newman-reporter-htmlextra": "^1.23.1"
+  }
+}

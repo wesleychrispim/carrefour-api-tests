@@ -1,0 +1,43 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<testsuites name="Carrefour API Users" tests="13" time="2.713">
+  <testsuite name="Setup: Criar admin p/ login" id="f6fe54cd-144c-4d79-bd0a-ef02212c6ece" timestamp="2025-08-28T13:44:56.014Z" tests="1" failures="0" errors="0" time="0.420">
+    <testcase name="Admin criado (200/201)" time="0.420" classname="SetupCriarAdminPLogin"/>
+  </testsuite>
+  <testsuite name="Login (JWT)" id="bf9c95bf-1af3-493e-b1c1-5cd44f89fb9c" timestamp="2025-08-28T13:44:56.014Z" tests="1" failures="0" errors="0" time="0.192">
+    <testcase name="Login 200" time="0.192" classname="LoginJwt"/>
+  </testsuite>
+  <testsuite name="CRUD / Listar usuários" id="56ab5730-fadb-4521-aaf9-3f2c09ab023f" timestamp="2025-08-28T13:44:56.014Z" tests="1" failures="0" errors="0" time="0.235">
+    <testcase name="Status 200" time="0.235" classname="CrudListarUsuarios"/>
+  </testsuite>
+  <testsuite name="CRUD / Criar usuário" id="807078d7-59b2-44d4-90c6-115aa9327c2a" timestamp="2025-08-28T13:44:56.014Z" tests="1" failures="0" errors="0" time="0.185">
+    <testcase name="Criado (200/201)" time="0.185" classname="CrudCriarUsuario"/>
+  </testsuite>
+  <testsuite name="CRUD / Consultar usuário por ID" id="c363f8cc-be89-4752-ac91-f3a4a056f83f" timestamp="2025-08-28T13:44:56.014Z" tests="2" failures="0" errors="0" time="0.169">
+    <testcase name="Status 200" time="0.169" classname="CrudConsultarUsuarioPorId"/>
+    <testcase name="ID confere" time="0.169" classname="CrudConsultarUsuarioPorId"/>
+  </testsuite>
+  <testsuite name="CRUD / Atualizar usuário" id="8879ecef-f5c1-4a70-b4e7-c5dc430ae0a7" timestamp="2025-08-28T13:44:56.014Z" tests="1" failures="0" errors="0" time="0.188">
+    <testcase name="Update 200/204" time="0.188" classname="CrudAtualizarUsuario"/>
+  </testsuite>
+  <testsuite name="CRUD / Deletar usuário" id="8371f0d1-b1c7-427a-9e15-fa72afaaa069" timestamp="2025-08-28T13:44:56.014Z" tests="1" failures="0" errors="0" time="0.191">
+    <testcase name="Delete 200/204" time="0.191" classname="CrudDeletarUsuario"/>
+  </testsuite>
+  <testsuite name="Negativos / Setup duplicado: criar base" id="7991f9ab-7667-4e0d-a771-7da7e00e2e18" timestamp="2025-08-28T13:44:56.014Z" tests="1" failures="0" errors="0" time="0.184">
+    <testcase name="Base 200/201" time="0.184" classname="NegativosSetupDuplicadoCriarBase"/>
+  </testsuite>
+  <testsuite name="Negativos / Criar usuário - e-mail duplicado" id="a52cdf95-6792-4bcc-b26d-f4b239956496" timestamp="2025-08-28T13:44:56.014Z" tests="1" failures="0" errors="0" time="0.174">
+    <testcase name="400/409 esperado" time="0.174" classname="NegativosCriarUsuarioEMailDuplicado"/>
+  </testsuite>
+  <testsuite name="Negativos / Criar usuário - sem nome" id="27f09d7f-8e23-4ab4-8742-72cbf0e747eb" timestamp="2025-08-28T13:44:56.014Z" tests="1" failures="0" errors="0" time="0.167">
+    <testcase name="400/422 esperado" time="0.167" classname="NegativosCriarUsuarioSemNome"/>
+  </testsuite>
+  <testsuite name="Negativos / Atualizar usuário - sem Content-Type" id="477bba85-5d89-4aad-86d7-0b243ba1a41c" timestamp="2025-08-28T13:44:56.014Z" tests="1" failures="0" errors="0" time="0.171">
+    <testcase name="400/415/422 esperado" time="0.171" classname="NegativosAtualizarUsuarioSemContentType"/>
+  </testsuite>
+  <testsuite name="Negativos / Listar usuários - sem JWT" id="bc38612b-0705-4f9e-9590-9e9dc4833aac" timestamp="2025-08-28T13:44:56.014Z" tests="1" failures="0" errors="0" time="0.216">
+    <testcase name="200/401/403 esperado" time="0.216" classname="NegativosListarUsuariosSemJwt"/>
+  </testsuite>
+  <testsuite name="Rate limit / GET /usuarios (rate)" id="2d60ee8b-6c91-433f-b8a5-33de51986460" timestamp="2025-08-28T13:44:56.014Z" tests="1" failures="0" errors="0" time="0.221">
+    <testcase name="Status 200 ou 429" time="0.221" classname="RateLimitGetUsuariosRate"/>
+  </testsuite>
+</testsuites>

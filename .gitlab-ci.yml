@@ -1,0 +1,46 @@
+stages: [test]
+
+api_test_main:
+  image: node:20
+  stage: test
+  cache:
+    paths: [node_modules/]
+  before_script:
+    - npm ci
+  script:
+    - npm run test
+  artifacts:
+    when: always
+    paths:
+      - reports/
+    expire_in: 7 days
+
+api_test_negatives:
+  image: node:20
+  stage: test
+  cache:
+    paths: [node_modules/]
+  before_script:
+    - npm ci
+  script:
+    - npm run test:negativos
+  artifacts:
+    when: always
+    paths:
+      - reports/
+    expire_in: 7 days
+
+api_test_rate:
+  image: node:20
+  stage: test
+  cache:
+    paths: [node_modules/]
+  before_script:
+    - npm ci
+  script:
+    - npm run test:rate
+  artifacts:
+    when: always
+    paths:
+      - reports/
+    expire_in: 7 days

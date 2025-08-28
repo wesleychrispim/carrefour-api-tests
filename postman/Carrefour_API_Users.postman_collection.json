@@ -1,0 +1,371 @@
+{
+  "info": {
+    "name": "Carrefour API Users",
+    "_postman_id": "11111111-2222-3333-4444-555555555555",
+    "description": "Suíte de API contra ServeRest com Login JWT, CRUD, cenários negativos e evidência de rate limit.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "event": [
+    {
+      "listen": "prerequest",
+      "script": {
+        "type": "text/javascript",
+        "exec": [
+          "// Collection-level Pre-request: injeta Authorization se houver jwt e não houver bypass",
+          "const token = pm.environment.get('jwt');",
+          "const bypass = pm.request.headers.get('X-Bypass-Auth');",
+          "if (token && !bypass) {",
+          "  if (!pm.request.headers.has('Authorization')) {",
+          "    pm.request.headers.add({ key: 'Authorization', value: token });",
+          "  } else {",
+          "    pm.request.headers.upsert({ key: 'Authorization', value: token });",
+          "  }",
+          "}"
+        ]
+      }
+    }
+  ],
+  "item": [
+    {
+      "name": "Setup: Criar admin p/ login",
+      "event": [
+        {
+          "listen": "prerequest",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.environment.set('loginEmail', `admin_${Date.now()}@mail.com`);",
+              "pm.environment.set('loginPassword', '12345678');"
+            ]
+          }
+        },
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Admin criado (200/201)', ()=>pm.expect([200,201]).to.include(pm.response.code));"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"nome\": \"Admin Test\",\n  \"email\": \"{{loginEmail}}\",\n  \"password\": \"{{loginPassword}}\",\n  \"administrador\": \"true\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/usuarios",
+          "host": ["{{baseUrl}}"],
+          "path": ["usuarios"]
+        }
+      }
+    },
+    {
+      "name": "Login (JWT)",
+      "request": {
+        "method": "POST",
+        "header": [
+          { "key": "Content-Type", "value": "application/json" }
+        ],
+        "body": {
+          "mode": "raw",
+          "raw": "{\n  \"email\": \"{{loginEmail}}\",\n  \"password\": \"{{loginPassword}}\"\n}"
+        },
+        "url": {
+          "raw": "{{baseUrl}}/login",
+          "host": ["{{baseUrl}}"],
+          "path": ["login"]
+        }
+      },
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Login 200', ()=>pm.response.to.have.status(200));",
+              "const json = pm.response.json();",
+              "pm.expect(json).to.have.property('authorization');",
+              "pm.environment.set('jwt', json.authorization);"
+            ]
+          }
+        }
+      ]
+    },
+    {
+      "name": "CRUD",
+      "item": [
+        {
+          "name": "Listar usuários",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/usuarios", "host": ["{{baseUrl}}"], "path": ["usuarios"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function(){ pm.response.to.have.status(200); });",
+                  "const json = pm.response.json();",
+                  "pm.expect(json).to.have.property('quantidade');",
+                  "pm.expect(json).to.have.property('usuarios');"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Criar usuário",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": { "type": "text/javascript", "exec": [ "pm.environment.set('timestamp', Date.now());" ] }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Criado (200/201)', function(){ pm.expect([200,201]).to.include(pm.response.code); });",
+                  "var body = pm.response.json();",
+                  "pm.environment.set('createdUserId', body._id);",
+                  "pm.environment.set('createdUserEmail', `qa_${pm.environment.get('timestamp')}@mail.com`);",
+                  "pm.expect(body).to.have.property('message');"
+                ]
+              }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"QA Auto\",\n  \"email\": \"qa_{{timestamp}}@mail.com\",\n  \"password\": \"123456\",\n  \"administrador\": \"true\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/usuarios", "host": ["{{baseUrl}}"], "path": ["usuarios"] }
+          }
+        },
+        {
+          "name": "Consultar usuário por ID",
+          "request": {
+            "method": "GET",
+            "url": { "raw": "{{baseUrl}}/usuarios/{{createdUserId}}", "host": ["{{baseUrl}}"], "path": ["usuarios","{{createdUserId}}"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Status 200', function(){ pm.response.to.have.status(200); });",
+                  "pm.test('ID confere', function(){ pm.expect(pm.response.json()._id).to.eql(pm.environment.get('createdUserId')); });"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Atualizar usuário",
+          "request": {
+            "method": "PUT",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"QA Updated\",\n  \"email\": \"{{createdUserEmail}}\",\n  \"password\": \"123456\",\n  \"administrador\": \"true\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/usuarios/{{createdUserId}}", "host": ["{{baseUrl}}"], "path": ["usuarios","{{createdUserId}}"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "pm.test('Update 200/204', function(){ pm.expect([200,204]).to.include(pm.response.code); });",
+                  "if (pm.response.code === 200) {",
+                  "  const json = pm.response.json();",
+                  "  pm.expect(json).to.be.an('object');",
+                  "}"
+                ]
+              }
+            }
+          ]
+        },
+        {
+          "name": "Deletar usuário",
+          "request": {
+            "method": "DELETE",
+            "url": { "raw": "{{baseUrl}}/usuarios/{{createdUserId}}", "host": ["{{baseUrl}}"], "path": ["usuarios","{{createdUserId}}"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": { "type": "text/javascript", "exec": [ "pm.test('Delete 200/204', ()=>pm.expect([200,204]).to.include(pm.response.code));" ] }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Negativos",
+      "item": [
+        {
+          "name": "Setup duplicado: criar base",
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": { "type": "text/javascript", "exec": [ "pm.environment.set('dupEmail', `dup_${Date.now()}@mail.com`);" ] }
+            },
+            {
+              "listen": "test",
+              "script": { "type": "text/javascript", "exec": [ "pm.test('Base 200/201', ()=>pm.expect([200,201]).to.include(pm.response.code));" ] }
+            }
+          ],
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"QA Dup Base\",\n  \"email\": \"{{dupEmail}}\",\n  \"password\": \"123456\",\n  \"administrador\": \"true\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/usuarios", "host": ["{{baseUrl}}"], "path": ["usuarios"] }
+          }
+        },
+        {
+          "name": "Criar usuário - e-mail duplicado",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"QA Dup Again\",\n  \"email\": \"{{dupEmail}}\",\n  \"password\": \"123456\",\n  \"administrador\": \"true\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/usuarios", "host": ["{{baseUrl}}"], "path": ["usuarios"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": { "type": "text/javascript", "exec": [ "pm.test('400/409 esperado', ()=>pm.expect([400,409]).to.include(pm.response.code));" ] }
+            }
+          ]
+        },
+        {
+          "name": "Criar usuário - sem nome",
+          "request": {
+            "method": "POST",
+            "header": [ { "key": "Content-Type", "value": "application/json" } ],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"email\": \"qa_{{timestamp}}@mail.com\",\n  \"password\": \"123456\",\n  \"administrador\": \"true\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/usuarios", "host": ["{{baseUrl}}"], "path": ["usuarios"] }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": { "type": "text/javascript", "exec": [ "pm.environment.set('timestamp', Date.now());" ] }
+            },
+            {
+              "listen": "test",
+              "script": { "type": "text/javascript", "exec": [ "pm.test('400/422 esperado', ()=>pm.expect([400,422]).to.include(pm.response.code));" ] }
+            }
+          ]
+        },
+        {
+          "name": "Atualizar usuário - sem Content-Type",
+          "request": {
+            "method": "PUT",
+            "header": [],
+            "body": {
+              "mode": "raw",
+              "raw": "{\n  \"nome\": \"QA SemHeader\",\n  \"email\": \"{{createdUserEmail}}\",\n  \"password\": \"123456\",\n  \"administrador\": \"true\"\n}"
+            },
+            "url": { "raw": "{{baseUrl}}/usuarios/{{createdUserId}}", "host": ["{{baseUrl}}"], "path": ["usuarios","{{createdUserId}}"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": { "type": "text/javascript", "exec": [ "pm.test('400/415/422 esperado', ()=>pm.expect([400,415,422]).to.include(pm.response.code));" ] }
+            }
+          ]
+        },
+        {
+          "name": "Listar usuários - sem JWT",
+          "request": {
+            "method": "GET",
+            "header": [
+              { "key": "X-Bypass-Auth", "value": "true" }
+            ],
+            "url": { "raw": "{{baseUrl}}/usuarios", "host": ["{{baseUrl}}"], "path": ["usuarios"] }
+          },
+          "event": [
+            {
+              "listen": "prerequest",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Remove Authorization após o collection-level (garante sem JWT nesta request)",
+                  "pm.request.headers.remove('Authorization');"
+                ]
+              }
+            },
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Dependendo do backend, pode ser público; ajuste se sua API exigir auth:",
+                  "pm.test('200/401/403 esperado', ()=>pm.expect([200,401,403]).to.include(pm.response.code));"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    },
+    {
+      "name": "Rate limit",
+      "item": [
+        {
+          "name": "GET /usuarios (rate)",
+          "request": {
+            "method": "GET",
+            "header": [],
+            "url": { "raw": "{{baseUrl}}/usuarios", "host": ["{{baseUrl}}"], "path": ["usuarios"] }
+          },
+          "event": [
+            {
+              "listen": "test",
+              "script": {
+                "type": "text/javascript",
+                "exec": [
+                  "// Executar com --iteration-count 105",
+                  "if (pm.info.iteration === 0) {",
+                  "  pm.environment.set('rate429Count', '0');",
+                  "  pm.environment.set('rateOkCount', '0');",
+                  "}",
+                  "pm.test('Status 200 ou 429', function(){ pm.expect([200,429]).to.include(pm.response.code); });",
+                  "let c429 = parseInt(pm.environment.get('rate429Count') || '0', 10);",
+                  "let cok = parseInt(pm.environment.get('rateOkCount') || '0', 10);",
+                  "if (pm.response.code === 429) { c429++; } else { cok++; }",
+                  "pm.environment.set('rate429Count', String(c429));",
+                  "pm.environment.set('rateOkCount', String(cok));",
+                  "console.log(`rate-limit counters -> 429: ${c429}, ok: ${cok}, iter: ${pm.info.iteration}`);"
+                ]
+              }
+            }
+          ]
+        }
+      ]
+    }
+  ],
+  "variable": []
+}
